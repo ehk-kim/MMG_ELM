@@ -5,6 +5,7 @@ date: "2024-11-11"
 ---
 
 ```{r}
+setwd("/projectnb/bi720/MMG")
 library(tidyverse)
 library(vroom)
 library(vegan)
@@ -20,20 +21,14 @@ Load data
 ```{r}
 #---------- Load data ----------#
 # metadata
-#metagenomes_metadata <- read.csv("CCASE_data/ccase_metagenome_metadata.csv")
-#mycocosm <- read.csv("picrust-for-fungi/data/mycocosm_its_merge.csv")
-
-metagenomes_metadata <- read.csv("ccase_metagenome_metadata.csv")
-mycocosm <- read.csv("mycocosm_its_merge.csv")
+metagenomes_metadata <- read.csv("CCASE_data/ccase_metagenome_metadata.csv")
+mycocosm <- read.csv("picrust-for-fungi/data/mycocosm_its_merge.csv")
 
 # metagenomes
-#metagenomes_fungi <- read.csv("CCASE_data/CCASE_soil_MG_2013_2014_full_annotation_fungi.csv") #contains EC
-metagenomes_fungi <- read.csv("CCASE_soil_MG_2013_2014_full_annotation_fungi.csv")
+metagenomes_fungi <- read.csv("CCASE_data/CCASE_soil_MG_2013_2014_full_annotation_fungi.csv") #contains EC
 
 its_all <- read.csv('ccase_its_w_species.csv')
 its_all <- subset(its_all, select = -c(X, Domain, Phylum, Class, Order, Family))
-
-its_metadata <- read.csv("ccase_its_metadata.csv")
 
 # cleanup
 rm(its_all)
@@ -62,7 +57,6 @@ metagenomes_fungi_tax$GoldID <- gold_ids
 # cleanup
 rm(split_taxa, domain_names, taxa_names, tax_table, split_transcript,
    transcript_names, gold_ids)
-
 ```
 
 single copy genes per fungal genome
@@ -85,11 +79,11 @@ sicgs <- sicgs[!is.na(sicgs)]
 load ITS data metagenome only its
 ```{r}
 # load ITS files
-#its_metadata <- read.csv("CCASE_data/ccase_its_metadata.csv")
+its_metadata <- read.csv("CCASE_data/ccase_its_metadata.csv")
 its_metadata_gold <- its_metadata[,c(6,7)]
 
 # load predicted metagenome files
-# mmg_pred <- read.csv("CCASE_data/gene_count_per_sample.csv", row.names = 1)
+mmg_pred <- read.csv("CCASE_data/gene_count_per_sample.csv", row.names = 1)
 
 # CHANGE HERE FOR SPECIES VS GENUS
 mmg_pred <- read.csv("gene_count_per_sample_species.csv", row.names = 1)
@@ -193,5 +187,4 @@ rm(id, df, i)
 # pearson_df$sample_id
 
 pearson_df <- pearson_df[order(pearson_df$sample_id),]
-# write.csv(pearson_df, 'ELM/pearson_df_90.csv')
 ```
