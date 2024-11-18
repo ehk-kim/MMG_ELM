@@ -1,0 +1,60 @@
+---
+title: "BLAST ASV counts"
+output: html_document
+date: "2024-17-11"
+---
+
+```{r}
+setwd("C:/Users/Emily/Desktop/ccase")
+
+library(tidyverse)
+```
+
+Load data
+
+```{r load data}
+#---------- Load data ----------#
+blast_50 <- read.csv("blast_90_ccase.csv")
+its_asv <- read.table("ccase_its_asv.txt")
+metadata <- read.csv("ccase_its_metadata.csv")
+
+colnames(its_asv) <- its_asv[1,]
+its_asv <- its_asv[-1,]
+```
+
+Filter its_asv to only include OTUs that appear in blast_50 ASV_ID
+```{r}
+blast_50 <- distinct(blast_50, ASV_ID, .keep_all = TRUE)
+filtered_its_asv <- filter(its_asv, OTU %in% blast_50$ASV_ID)
+filtered_its_asv <- subset(filtered_its_asv, select = -c(Soil_119_2))
+its_asv_t <- t(filtered_its_asv)
+its_asv_t <- its_asv_t[-1,]
+its_asv_t <- cbind(JGI.ID = rownames(its_asv_t), its_asv_t)
+its_asv_t <- as.data.frame(its_asv_t)
+```
+
+Add GOLD IDs to each sample
+```{r}
+its_asv_t <- its_asv_t %>%
+  left_join(metadata %>% select(JGI.ID, GOLD.ID), by = "JGI.ID") %>%
+  relocate(GOLD.ID)
+```
+
+Condense by GOLD ID
+```{r}
+its_asv_t <- its_asv_t[, -2]
+its_asv_t <- its_asv_t %>%
+  mutate(across(-GOLD.ID, as.numeric))
+
+blast_50_asv <- aggregate(. ~ GOLD.ID, its_asv_t, sum)
+```
+
+Count
+```{r}
+blast_50_asv <- blast_50_asv %>%
+  mutate(asv_counts = rowSums(across(-GOLD.ID, ~ . > 0))) %>%
+  relocate(asv_counts)
+
+df <- blast_50_asv %>%
+  select(c(asv_counts, GOLD.ID))
+```
