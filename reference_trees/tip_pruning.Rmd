@@ -1,0 +1,28 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+This script prunes the tips of a tree based on a custom set of tip names.
+
+```{r}
+library(ape)
+```
+
+Read in the JGI tree to do custom tip pruning
+```{r}
+jgi <- read.tree("jgi_modded_alltips.txt")
+tip_labels <- jgi$tip.label
+df <- data.frame(tips = tip_labels)
+write.csv(df, "edit_tips.csv", quote = FALSE)
+```
+
+Set tips to delete
+```{r}
+tips <- c("Acain1", "Acema1", "Amphiamblys_sp.", "Armga1", "Armost1", "Arnium", "Arxula", "Ascni1", "Aspacu1", "Aspbru1", "Aspcos1", "Aspell1", "Aspergillus_nomius3137_1", "Aspeuc1", "Aspfij1", "Asphet1", "Asphom1", "Aspibe1", "Aspind1", "Aspjap1", "Asplac1", "Aspneo1", "Asppip1", "Asppseute1", "Aspsac1", "Aspscl1", "Aspscle1", "Aspuva1", "Aspvad1", "Aspvio1", "Bimnz1", "Biscogniauxia_sp.", "Cadophora_sp.", "Cadophora_sp.", "Canmem1", "CerAGI", "Cersp1", "Chaetomium_sp.", "Chytriomyces_sp.", "Cladorrhinum_sp.", "Cladorrhinum_sp.", "Coniochaeta_sp.", "Copmar1", "Copmic2", "Coprinopsis_sp.", "Copromyces_sp.", "Cordyceps_sp.", "Crycu1", "Cryte1", "Daldinia_sp.", "Decga1", "Densp1", "Diohu1", "Emericellopsis_sp.", "Endogone_sp", "Erebi1", "Fennellomyces_sp.", "FoxFo5176", "FoxII5", "Fusarium_oxysporum_2", "Fusarium_sp.", "Ganoderma_sp.", "Haplosporangium_sp.", "Haplosporangium_sp.", "Haplosporangium_sp.", "Helsul1", "Hydru2", "Hypoxylon_sp.", "Hypoxylon_sp.", "Hypoxylon_sp.", "Hypoxylon_sp.", "Hypoxylon_sp.", "Hypoxylon_sp.", "Hypoxylon_sp.", "Hypoxylon_sp.", "Hypoxylon_sp.", "Hypoxylon_sp.", "Ilyonectria_sp.", "Ilyonectria_sp.", "Jamsp1", "Lachancea_sp.", "Lacqui1", "Lactifluus_cf.", "Lactifluus_cf.", "Leisp1", "Leotiomycetes_sp.", "Leotiomycetes_sp.", "Leptodontidium_sp.", "Linin1", "Lizem1", "Marfi1", "Maseb1", "Meimi1", "MicG_I_3", "Micmi1", "Morhum1", "Morimp1", "Mortierella_sp.", "Mortierella_sp.", "Mortierella_sp.", "Mortierella_sp.", "Mortierella_sp.", "Mortierella_sp.", "Mortierella_sp.", "Mortierella_sp.", "Mortierella_sp.", "Mortierella_sp.", "Mortierella_sp.", "Mortierella_sp.", "Mortierella_sp.", "Mortierella_sp.", "Mortierella_sp.", "Mycgal1", "Mycosphaerella", "Mytre1", "Nemania_sp.", "Nemania_sp.", "Nemania_sp.", "Orpinomyces_sp.", "Panru1", "Paxam1", "Pecoramyces_sp.", "Peniophora_sp.", "Perma1", "Pestalotiopsis_sp.", "Phlebopus_sp.", "Phyllosticta_sp.", "Piromyces_sp.", "Pisolithus_sp.", "Pleery1", "Plucer1", "Podospora_aff.", "Polbr1", "Pseudogymnoascus_sp.", "Pseudogymnoascus_sp.", "Pseudogymnoascus_sp.", "Pseudogymnoascus_sp.", "Pseudogymnoascus_sp.", "Pseudogymnoascus_sp.", "Pyrenochaeta_sp.", "Rachicladosporium_sp.", "Rhexocercosporidium_sp.", "Rhihy1", "Rhiir2_1", "RhiirA1_1", "RhiirB3", "RhiirC2", "Rhili1", "Rhodotorula_sp.", "Rhodotorula_sp.", "Rhodsp1", "Ricmel1", "Saccharomycetaceae_sp", "Setho1", "Sistotrema_sp.", "Sorhu1", "Stagonospora_sp.", "Suidec1", "Suigr1", "Suihi1", "Suillus_cf.", "Synps1", "Terbo2", "Termitomyces_sp.", "Tescy1", "Thasp1", "Thega1", "Tilwa1", "Trace1", "Traci1", "Tribi1", "Tubbor1", "Umbelopsis_sp.", "Umbra1", "Ustsp1", "Xerba1", "Xylaria_cf.", "Xylaria_cf.", "Xylaria_sp.", "Xylaria_sp.", "Xylaria_sp.", "Xylaria_sp.", "Xylaria_sp.", "Xylaria_sp.", "Xylariaceae_sp.", "Xylariaceae_sp.", "Xylariaceae_sp.", "Xylariaceae_sp.", "Xylariaceae_sp.", "Xylariaceae_sp.", "Xylariaceae_sp.", "Xylariaceae_sp.", "Xylariaceae_sp.", "Xylariales_sp.", "Xylariomycetidae_sp.", "Xylariomycetidae_sp.", "Yarrowia_lipolytica_1", "Gelatoporia")
+```
+
+Delete tips
+```{r}
+new_tree <- drop.tip(jgi, tips)
+write.tree(new_tree, "jgi_half_pruned.txt")
+```
