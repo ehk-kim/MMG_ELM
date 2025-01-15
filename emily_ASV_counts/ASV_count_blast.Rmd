@@ -8,13 +8,23 @@ date: "2024-17-11"
 setwd("C:/Users/Emily/Desktop/ccase")
 
 library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(viridis)
+library(ggforce)
+library(concaveman)
 ```
 
 Load data
 
 ```{r load data}
 #---------- Load data ----------#
-blast_50 <- read.csv("blast_90_ccase.csv")
+blast_50 <- read.csv("blast_50_ccase.csv")
+blast_60 <- read.csv("blast_60_ccase.csv")
+blast_70 <- read.csv("blast_60_ccase.csv")
+blast_80 <- read.csv("blast_60_ccase.csv")
+blast_90 <- read.csv("blast_60_ccase.csv")
+
 its_asv <- read.table("ccase_its_asv.txt")
 metadata <- read.csv("ccase_its_metadata.csv")
 
@@ -22,39 +32,98 @@ colnames(its_asv) <- its_asv[1,]
 its_asv <- its_asv[-1,]
 ```
 
-Filter its_asv to only include OTUs that appear in blast_50 ASV_ID
-```{r}
-blast_50 <- distinct(blast_50, ASV_ID, .keep_all = TRUE)
-filtered_its_asv <- filter(its_asv, OTU %in% blast_50$ASV_ID)
-filtered_its_asv <- subset(filtered_its_asv, select = -c(Soil_119_2))
-its_asv_t <- t(filtered_its_asv)
-its_asv_t <- its_asv_t[-1,]
-its_asv_t <- cbind(JGI.ID = rownames(its_asv_t), its_asv_t)
-its_asv_t <- as.data.frame(its_asv_t)
+Function to get df of each blast for ggplot
+``` {r}
+asv_count <- function(blast_file, its_asv_df, md_df) {
+  
+  # Filter its_asv_df to only include OTUs that appear in blast_file ASV_ID column
+  blast_file <- distinct(blast_file, ASV_ID, .keep_all = TRUE)
+  filtered_its_asv <- filter(its_asv_df, OTU %in% blast_file$ASV_ID)
+  filtered_its_asv <- subset(filtered_its_asv, select = -c(Soil_119_2))
+  its_asv_t <- t(filtered_its_asv)
+  its_asv_t <- its_asv_t[-1,]
+  its_asv_t <- cbind(JGI.ID = rownames(its_asv_t), its_asv_t)
+  its_asv_t <- as.data.frame(its_asv_t)
+  
+  # Add GOLD IDs to each sample
+  its_asv_t <- its_asv_t %>%
+    left_join(md_df %>% select(JGI.ID, GOLD.ID), by = "JGI.ID") %>%
+    relocate(GOLD.ID)
+  
+  # Condense by GOLD ID
+  its_asv_t <- its_asv_t[, -2]
+  its_asv_t <- its_asv_t %>%
+    mutate(across(-GOLD.ID, as.numeric))
+
+  blast_file <- aggregate(. ~ GOLD.ID, its_asv_t, sum)
+  
+  # Count
+  blast_file <- blast_file %>%
+    mutate(asv_counts = rowSums(across(-GOLD.ID, ~ . > 0))) %>%
+    relocate(asv_counts)
+
+  df <- blast_file %>%
+    select(c(asv_counts, GOLD.ID))
+  
+  return(df)
+}
 ```
 
-Add GOLD IDs to each sample
 ```{r}
-its_asv_t <- its_asv_t %>%
-  left_join(metadata %>% select(JGI.ID, GOLD.ID), by = "JGI.ID") %>%
-  relocate(GOLD.ID)
+blast50_counts <- asv_count(blast_50, its_asv, metadata)
+blast60_counts <- asv_count(blast_60, its_asv, metadata)
+blast70_counts <- asv_count(blast_70, its_asv, metadata)
+blast80_counts <- asv_count(blast_80, its_asv, metadata)
+blast90_counts <- asv_count(blast_90, its_asv, metadata)
 ```
 
-Condense by GOLD ID
+Plot pearson graphs - number taxa
 ```{r}
-its_asv_t <- its_asv_t[, -2]
-its_asv_t <- its_asv_t %>%
-  mutate(across(-GOLD.ID, as.numeric))
+pearsons <- read.csv("Pearsons.csv")
+pearsons <- pearsons %>% replace(is.na(.), 0)
 
-blast_50_asv <- aggregate(. ~ GOLD.ID, its_asv_t, sum)
+c15 <- c(
+  "dodgerblue2",
+  "#E31A1C", # red
+  "green4",
+  "#6A3D9A", # purple
+  "#FF7F00", # orange
+  "black",
+  "gold1",
+  "#FB9A99", # lt pink
+  "palegreen2",
+  "gray70",
+  "orchid1",
+  "blue1",
+  "darkturquoise",
+  "yellow4",
+  "darkorange4"
+)
+
+num_sample <- ggplot(data = pearsons, aes(x = n_taxa_w_genome, y = pearson, color = sample)) +
+  geom_point(size = 4) +
+  scale_color_manual(values = c15) +
+  ggtitle("Pearson correlation vs. Number of taxa assigned a genome - colored by sample") +
+  theme_minimal()
+
+num_method <- ggplot(data = pearsons, aes(x = n_taxa_w_genome, y = pearson, color = pred_method)) +
+  geom_point(size = 4) +
+  scale_color_manual(values = viridis(5)) +
+  ggtitle("Pearson correlation vs. Number of taxa assigned a genome - colored by method") +
+  theme_minimal()
 ```
 
-Count
+Plot pearson graphs - percent taxa
 ```{r}
-blast_50_asv <- blast_50_asv %>%
-  mutate(asv_counts = rowSums(across(-GOLD.ID, ~ . > 0))) %>%
-  relocate(asv_counts)
+perc_sample <- ggplot(data = pearsons, aes(x = percent_taxa_w_genome, y = pearson, color = sample)) +
+  geom_point(size = 4) +
+  scale_color_manual(values = c15) +
+  ggtitle("Pearson correlation vs. Number of taxa assigned a genome - colored by sample") +
+  theme_minimal()
 
-df <- blast_50_asv %>%
-  select(c(asv_counts, GOLD.ID))
+perc_method <- ggplot(data = pearsons, aes(x = percent_taxa_w_genome, y = pearson, color = pred_method)) +
+  geom_point(size = 4) +
+  scale_color_manual(values = viridis(5)) +
+  ggtitle("Pearson correlation vs. Number of taxa assigned a genome - colored by method") +
+  theme_minimal()
 ```
