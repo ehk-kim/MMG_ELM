@@ -36,9 +36,26 @@ li <- read.tree("Lietal_2021.nwk")
 # Read in comparison tree
 input_tree <- read.tree(fin)
 
+# Get tip labels for all trees
+jgi_labels <- jgi$tip.label
+li_labels <- li$tip.label
+input_labels <- input_tree$tip.label
+
+# Input + JGI
+# Find all tips in common
+in_jgi_common <- intersect(jgi_labels, input_labels)
+jgi <- keep.tip(jgi, in_jgi_common)
+input_jgi <- keep.tip(jgi, in_jgi_common)
+
+# Input + Li
+# Find all tips in common
+in_li_common <- intersect(li_labels, input_labels)
+li <- keep.tip(li, in_li_common)
+input_li <- keep.tip(li, in_li_common)
+
 # Compute the Nye similarity scores
-nye_jgi <- NyeSimilarity(jgi, input_tree, normalize = pmax.int)
-nye_li <- NyeSimilarity(li, input_tree, normalize = pmax.int)
+nye_jgi <- NyeSimilarity(jgi, input_jgi, normalize = pmax.int)
+nye_li <- NyeSimilarity(li, input_li, normalize = pmax.int)
 
 #####
 # normalize = pmax.int normalizes against the number of splits in the most
