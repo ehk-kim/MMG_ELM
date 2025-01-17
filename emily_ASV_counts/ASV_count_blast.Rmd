@@ -1,22 +1,22 @@
 ---
 title: "BLAST ASV counts"
 output: html_document
-date: "2024-17-11"
+date: "2025-17-01"
 ---
 
-```{r}
-setwd("C:/Users/Emily/Desktop/ccase")
+```{r load libraries}
+# setwd("/Users/ekim/Desktop/MMG_ELM/emily_ASV_counts")
 
 library(tidyverse)
 library(ggplot2)
 library(dplyr)
+library(tidyr)
 library(viridis)
 library(ggforce)
 library(concaveman)
 ```
 
 Load data
-
 ```{r load data}
 #---------- Load data ----------#
 blast_50 <- read.csv("blast_50_ccase.csv")
@@ -24,6 +24,7 @@ blast_60 <- read.csv("blast_60_ccase.csv")
 blast_70 <- read.csv("blast_60_ccase.csv")
 blast_80 <- read.csv("blast_60_ccase.csv")
 blast_90 <- read.csv("blast_60_ccase.csv")
+mmg_its <- read.csv("ccase_its_w_species.csv")
 
 its_asv <- read.table("ccase_its_asv.txt")
 metadata <- read.csv("ccase_its_metadata.csv")
@@ -32,9 +33,9 @@ colnames(its_asv) <- its_asv[1,]
 its_asv <- its_asv[-1,]
 ```
 
-Function to get df of each blast for ggplot
-``` {r}
-asv_count <- function(blast_file, its_asv_df, md_df) {
+Function to get ASV counts for each BLAST method
+``` {r load functions}
+asv_count_blast <- function(blast_file, its_asv_df, md_df) {
   
   # Filter its_asv_df to only include OTUs that appear in blast_file ASV_ID column
   blast_file <- distinct(blast_file, ASV_ID, .keep_all = TRUE)
@@ -67,18 +68,58 @@ asv_count <- function(blast_file, its_asv_df, md_df) {
   
   return(df)
 }
+
+asv_count_MMG <- function(its_df, md_df) {
+  # Attach GOLD ID
+  its_df <- its_df[,-1]
+  its_df <- t(its_df)
+  its_df <- as.data.frame(its_df)
+  its_df$JGI.ID <- row.names(its_df)
+  its_df <- its_df %>%
+    left_join(md_df %>% select(JGI.ID, GOLD.ID), by = "JGI.ID") %>%
+    relocate(GOLD.ID)
+
+  # Aggregate by GOLD ID
+  its_df <- its_df[1:(length(its_df)-1)]
+  its_df <- aggregate(. ~ GOLD.ID, its_df, sum)
+  row.names(its_df) <- its_df$GOLD.ID
+  its_df <- its_df[,-1]
+
+  # Count
+  its_df$counts <- rowSums(its_df > 0)
+  its_df <- its_df %>% relocate(counts)
+  
+  return(its_df)
+}
 ```
 
-```{r}
-blast50_counts <- asv_count(blast_50, its_asv, metadata)
-blast60_counts <- asv_count(blast_60, its_asv, metadata)
-blast70_counts <- asv_count(blast_70, its_asv, metadata)
-blast80_counts <- asv_count(blast_80, its_asv, metadata)
-blast90_counts <- asv_count(blast_90, its_asv, metadata)
+Run functions on datasets
+```{r get counts}
+blast50_counts <- asv_count_blast(blast_50, its_asv, metadata)
+blast60_counts <- asv_count_blast(blast_60, its_asv, metadata)
+blast70_counts <- asv_count_blast(blast_70, its_asv, metadata)
+blast80_counts <- asv_count_blast(blast_80, its_asv, metadata)
+blast90_counts <- asv_count_blast(blast_90, its_asv, metadata)
+
+sp_asv <- mmg_its %>% drop_na(species)
+sp_asv <- subset(sp_asv, select = -c(Domain, Phylum, Class, Order, Family, genus))
+sp_asv <- sp_asv %>% relocate(species)
+## aggregating by species - total 531
+# test <- aggregate(. ~ species, sp_asv, sum)
+# row.names(test) <- test$species
+mmg_sp_counts <- asv_count_MMG(sp_asv, metadata)
+
+gen_asv <- mmg_its %>% drop_na(genus)
+gen_asv <- subset(gen_asv, select = -c(Domain, Phylum, Class, Order, Family, species))
+gen_asv <- gen_asv %>% relocate(genus)
+## aggregating by genus - total 331
+# test <- aggregate(. ~ genus, gen_asv, sum)
+# row.names(test) <- test$genus
+mmg_gen_counts <- asv_count_MMG(test, metadata)
 ```
 
 Plot pearson graphs - number taxa
-```{r}
+```{r plot pearsons - number}
 pearsons <- read.csv("Pearsons.csv")
 pearsons <- pearsons %>% replace(is.na(.), 0)
 
@@ -114,7 +155,7 @@ num_method <- ggplot(data = pearsons, aes(x = n_taxa_w_genome, y = pearson, colo
 ```
 
 Plot pearson graphs - percent taxa
-```{r}
+```{r plot pearsons - percent}
 perc_sample <- ggplot(data = pearsons, aes(x = percent_taxa_w_genome, y = pearson, color = sample)) +
   geom_point(size = 4) +
   scale_color_manual(values = c15) +
