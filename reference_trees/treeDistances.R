@@ -45,13 +45,13 @@ input_labels <- input_tree$tip.label
 # Find all tips in common
 in_jgi_common <- intersect(jgi_labels, input_labels)
 jgi <- keep.tip(jgi, in_jgi_common)
-input_jgi <- keep.tip(jgi, in_jgi_common)
+input_jgi <- keep.tip(input_tree, in_jgi_common)
 
 # Input + Li
 # Find all tips in common
 in_li_common <- intersect(li_labels, input_labels)
 li <- keep.tip(li, in_li_common)
-input_li <- keep.tip(li, in_li_common)
+input_li <- keep.tip(input_tree, in_li_common)
 
 # Compute the Nye similarity scores
 nye_jgi <- NyeSimilarity(jgi, input_jgi, normalize = pmax.int)
