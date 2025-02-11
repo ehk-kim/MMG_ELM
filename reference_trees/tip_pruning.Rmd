@@ -2,11 +2,19 @@
 title: "R Notebook"
 output: html_notebook
 ---
-This script prunes the tips of a tree based on a custom set of tip names.
 
 ```{r}
 library(ape)
+library(phytools)
+library(dplyr)
+library(tibble)
+library(purrr)
 ```
+
+##### CUSTOM TIP PRUNING #####
+This section prunes tips based on a custom set of tip names. This is primarily
+to remove duplicates or to remove tips that should not be part of the final
+set.
 
 Read in the reference trees to do custom tip pruning
 ```{r}
@@ -40,3 +48,34 @@ prune_tips <- function(tree, tips, fout) {
 prune_tips(jgi, jgi_tips, "jgi_half_pruned.txt")
 prune_tips(li, li_tips, "Lietal_2021.nwk")
 ```
+##############################
+
+
+##### TRIM TO FAMILY LEVEL #####
+This section creates a family-level backbone. For other levels of taxonomy, replace
+the tips with sets of tip names based on the level you need.
+
+Read in trees
+```{r}
+jgi <- read.tree("JGItree.nwk")
+li <- read.tree("Lietal_2021.nwk")
+
+li_tax <- read.csv("li_taxonomy.csv")
+
+# test <- li_tax %>%
+#   group_by(family) %>%
+#   summarize(species = paste(old_taxonID_linked_genome_sequence, collapse = '", "'))
+
+unique_fam <- unique(li_tax$family)
+species_list <- list()
+
+for (fam in unique_fam) {
+  species <- li_tax$species[li_tax$family == fam]
+  species_list[[fam]] <- species
+}
+
+
+# use findMRCA of phytools to find the family node OR getMRCA of ape
+# trim trees down to the family node
+```
+################################
