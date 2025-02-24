@@ -9,6 +9,7 @@ library(phytools)
 library(dplyr)
 library(tibble)
 library(purrr)
+# library(ggplot2)
 ```
 
 ##### CUSTOM TIP PRUNING #####
@@ -57,25 +58,111 @@ the tips with sets of tip names based on the level you need.
 
 Read in trees
 ```{r}
+# read in trees
 jgi <- read.tree("JGItree.nwk")
 li <- read.tree("Lietal_2021.nwk")
 
-li_tax <- read.csv("li_taxonomy.csv")
+# reading in portalid_taxname.csv - unsure if needed
+# extra_tax <- read.csv("portalid_taxname.csv")
+# extra_tax <- subset(extra_tax, select = c(species, genus))
+# extra_tax <- distinct(extra_tax, species, .keep_all = TRUE)
+# colnames(extra_tax) <- c("Species", "Genus")
 
-# test <- li_tax %>%
-#   group_by(family) %>%
-#   summarize(species = paste(old_taxonID_linked_genome_sequence, collapse = '", "'))
+all_tax <- read.csv("unite_taxonomy.csv")
+all_tax <- distinct(all_tax, Species, .keep_all = TRUE)
 
-unique_fam <- unique(li_tax$family)
-species_list <- list()
+# manipulate taxonomy information for JGI tree
+jgi_tips <- as.data.frame(jgi$tip.label)
+jgi_tips[, 'empty'] = NA
+colnames(jgi_tips) <- c("Species", "Genus")
+jgi_tips$Genus <- sub("_.*", "", jgi_tips$Species)
 
-for (fam in unique_fam) {
-  species <- li_tax$species[li_tax$family == fam]
-  species_list[[fam]] <- species
-}
+jgi_tax <- jgi_tips %>%
+  inner_join(all_tax, by=c("Genus"))
 
+# extract family information
+jgi_tax <- subset(jgi_tax, select = c(Species.x, Family))
+jgi_tax <- distinct(jgi_tax, Species.x, .keep_all = TRUE)
+colnames(jgi_tax) <- c("Species", "Family")
 
-# use findMRCA of phytools to find the family node OR getMRCA of ape
-# trim trees down to the family node
+# species in JGI that do not have family information in the UNITE database
+# after being genus-matched
+test <- subset(jgi_tips, !(Species %in% jgi_tax$Species))
+
+# manipulate taxonomy information for Li tree
+li_tips <- as.data.frame(li$tip.label)
+li_tips[, 'empty'] = NA
+colnames(li_tips) <- c("Species", "Genus")
+li_tips$Genus <- sub("_.*", "", li_tips$Species)
+
+li_tax <- li_tips %>%
+  inner_join(all_tax, by=c("Genus"))
+
+# extract family information
+li_tax <- subset(li_tax, select = c(Species.x, Family))
+li_tax <- distinct(li_tax, Species.x, .keep_all = TRUE)
+colnames(li_tax) <- c("Species", "Family")
+
+# species in li that do not have family information in the UNITE database
+# after being genus-matched
+test <- subset(li_tips, !(Species %in% li_tax$Species))
+
+### ape stuff
+ape::getMRCA(jgi, c("Trichoderma_gamsii", "Trichoderma_atroviride", "test_test"))
+
 ```
 ################################
+
+
+##### DIVERSITY VIZ #####
+```{r}
+class_div <- aggregate(li_tax$class, by=list(li_tax$class), FUN=length) %>%
+  as.data.frame()
+
+# Above 100: Agaricomycetes, Dothideomycetes, Eurotiomycetes, Saccharomycetes, Sordariomycetes
+# 1.Saccharomycetes
+sacch <- li_tax[li_tax$class == "Saccharomycetes",]
+Saccharomycetes_div <- aggregate(sacch$order, by=list(sacch$order), FUN=length) %>%
+  as.data.frame()
+
+# 2. Sordariomycetes
+sord <- li_tax[li_tax$class == "Sordariomycetes",]
+Sordariomycetes_div <- aggregate(sord$order, by=list(sord$order), FUN=length) %>%
+  as.data.frame()
+
+# 3. Agaricomycetes
+agarico <- li_tax[li_tax$class == "Agaricomycetes",]
+Agaricomycetes_div <- aggregate(agarico$order, by=list(agarico$order), FUN=length) %>%
+  as.data.frame()
+
+# 4. Eurotiomycetes
+eurotio <- li_tax[li_tax$class == "Eurotiomycetes",]
+Eurotiomycetes_div <- aggregate(eurotio$order, by=list(eurotio$order), FUN=length) %>%
+  as.data.frame()
+
+# 5. Dothideomycetes
+dothideo <- li_tax[li_tax$class == "Dothideomycetes",]
+Dothideomycetes_div <- aggregate(dothideo$order, by=list(dothideo$order), FUN=length) %>%
+  as.data.frame()
+
+plot_div <- function(df, xlabel, title) {
+  ggplot(df, aes(x=Group.1, y=x)) +
+  geom_bar(stat = "identity") +
+  ylab("Count") +
+  xlab(xlabel) +
+  ggtitle(title) +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1, size=8))
+}
+
+# All Classes
+plot_div(class_div, "Class", "Li tree diversity - Class")
+
+# Top 5 Classes
+plot_div(Saccharomycetes_div, "Saccharomycetes Orders", "Li tree diversity - Orders in Saccharomycetes")
+plot_div(Sordariomycetes_div, "Sordariomycetes Orders", "Li tree diversity - Orders in Sordariomycetes")
+plot_div(Agaricomycetes_div, "Agaricomycetes Orders", "Li tree diversity - Orders in Agaricomycetes")
+plot_div(Eurotiomycetes_div, "Eurotiomycetes Orders", "Li tree diversity - Orders in Eurotiomycetes")
+plot_div(Dothideomycetes_div, "Dothideomycetes Orders", "Li tree diversity - Orders in Dothideomycetes")
+```
+
+#########################
