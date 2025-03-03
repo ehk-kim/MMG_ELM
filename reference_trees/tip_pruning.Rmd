@@ -3,12 +3,13 @@ title: "R Notebook"
 output: html_notebook
 ---
 
-```{r}
+```{r, include=FALSE}
 library(ape)
 library(phytools)
 library(dplyr)
 library(tibble)
 library(purrr)
+library(taxize)
 # library(ggplot2)
 ```
 
@@ -51,66 +52,67 @@ prune_tips(li, li_tips, "Lietal_2021.nwk")
 ```
 ##############################
 
-
 ##### TRIM TO FAMILY LEVEL #####
 This section creates a family-level backbone. For other levels of taxonomy, replace
 the tips with sets of tip names based on the level you need.
 
-Read in trees
+Get family information
 ```{r}
-# read in trees
-jgi <- read.tree("JGItree.nwk")
-li <- read.tree("Lietal_2021.nwk")
+get_fams <- function(trefile) {
+  # read in tree file to trim
+  tre <- read.tree(trefile)
+  
+  # get taxonomy information from UNITE database
+  all_tax <- read.csv("unite_taxonomy.csv")
+  all_tax <- distinct(all_tax, Species, .keep_all = TRUE)
+  
+  # manipulate taxonomy information to get family
+  tre_tips <- as.data.frame(tre$tip.label)
+  tre_tips[, 'empty'] = NA
+  colnames(tre_tips) <- c("Species", "Genus")
+  tre_tips$Genus <- sub("_.*", "", tre_tips$Species)
 
-# reading in portalid_taxname.csv - unsure if needed
-# extra_tax <- read.csv("portalid_taxname.csv")
-# extra_tax <- subset(extra_tax, select = c(species, genus))
-# extra_tax <- distinct(extra_tax, species, .keep_all = TRUE)
-# colnames(extra_tax) <- c("Species", "Genus")
+  tre_tax <- tre_tips %>%
+    inner_join(all_tax, by=c("Genus"))
 
-all_tax <- read.csv("unite_taxonomy.csv")
-all_tax <- distinct(all_tax, Species, .keep_all = TRUE)
+  # extract family information
+  tre_tax <- subset(tre_tax, select = c(Species.x, Family))
+  tre_tax <- distinct(tre_tax, Species.x, .keep_all = TRUE)
+  colnames(tre_tax) <- c("Species", "Family")
 
-# manipulate taxonomy information for JGI tree
-jgi_tips <- as.data.frame(jgi$tip.label)
-jgi_tips[, 'empty'] = NA
-colnames(jgi_tips) <- c("Species", "Genus")
-jgi_tips$Genus <- sub("_.*", "", jgi_tips$Species)
+  # species in tre that do not have family information in the UNITE database
+  # after being genus-matched
+  non_unite <- subset(tre_tips, !(Species %in% tre_tax$Species))
+  
+  # return taxa that have family information and those that don't
+  return(list("tre_tax" = tre_tax, "non_unite" = non_unite))
+}
 
-jgi_tax <- jgi_tips %>%
-  inner_join(all_tax, by=c("Genus"))
+jgi <- get_fams("JGItree.nwk")
+li <- get_fams("Lietal_2021.nwk")
+```
 
-# extract family information
-jgi_tax <- subset(jgi_tax, select = c(Species.x, Family))
-jgi_tax <- distinct(jgi_tax, Species.x, .keep_all = TRUE)
-colnames(jgi_tax) <- c("Species", "Family")
+Get missing family information from NCBI
+```{r}
+jgi_ids <- jgi$non_unite$Species
+test <- get_ids(jgi_ids, db = "ncbi")
 
-# species in JGI that do not have family information in the UNITE database
-# after being genus-matched
-test <- subset(jgi_tips, !(Species %in% jgi_tax$Species))
+for (i in 1:62) {
+  test1 <- test$ncbi[i]
+  fam <- classification(test1, db = "ncbi")
+}
+test1 <- test$ncbi[2]
 
-# manipulate taxonomy information for Li tree
-li_tips <- as.data.frame(li$tip.label)
-li_tips[, 'empty'] = NA
-colnames(li_tips) <- c("Species", "Genus")
-li_tips$Genus <- sub("_.*", "", li_tips$Species)
+fam <- classification(test1, db = "ncbi")
+```
 
-li_tax <- li_tips %>%
-  inner_join(all_tax, by=c("Genus"))
-
-# extract family information
-li_tax <- subset(li_tax, select = c(Species.x, Family))
-li_tax <- distinct(li_tax, Species.x, .keep_all = TRUE)
-colnames(li_tax) <- c("Species", "Family")
-
-# species in li that do not have family information in the UNITE database
-# after being genus-matched
-test <- subset(li_tips, !(Species %in% li_tax$Species))
-
+ape stuff
+```{r}
 ### ape stuff
 ape::getMRCA(jgi, c("Trichoderma_gamsii", "Trichoderma_atroviride", "test_test"))
-
 ```
+
+
 ################################
 
 
