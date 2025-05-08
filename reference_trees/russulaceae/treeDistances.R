@@ -7,7 +7,7 @@
 # script will not run without the russtree.nwk and Lietal_2021.nwk files available
 # in this folder.
 # 
-# Use: Rscript treeDistances.R input output
+# Use: Rscript treeDistances.R referenceTree inputTree outputFile
 #      input: tree in Newick file format
 #      output: file name you want to output the results to. if the file exists,
 #              outputs will be appended. if not, file will be created. output is
@@ -18,13 +18,14 @@
 args <- commandArgs(trailingOnly = TRUE)
 
 # Wrong number of arguments
-if(length(args) < 2){
-  print("Please include both input and output file names.")
+if(length(args) < 3){
+  print("Please include a reference tree, an input tree, and an output file name.")
   stop("Requires command line argument.")
 }
 
-fin <- args[1]
-fout <- args[2]
+refFile <- args[1]
+fin <- args[2]
+fout <- args[3]
 
 # Load all libraries
 if (!require(TreeDist)) {
@@ -40,25 +41,25 @@ if (!require(ape)) {
 library(TreeDist)
 library(ape)
 
-# Read in reference trees
-russ <- read.tree("Looney_unrooted_unedited")
+# Read in reference tree
+ref_tree <- read.tree(refFile)
 
 # Read in comparison tree
 input_tree <- read.tree(fin)
 
 # Get tip labels for all trees
-russ_labels <- russ$tip.label
+ref_labels <- ref_tree$tip.label
 input_labels <- input_tree$tip.label
 
-# Input + russ
+# Input + reference tree
 # Find all tips in common
-in_russ_common <- intersect(russ_labels, input_labels)
-russ <- keep.tip(russ, in_russ_common)
-input_russ <- keep.tip(input_tree, in_russ_common)
-russ_tips_kept <- length(input_russ$tip.label)
+in_ref_common <- intersect(ref_labels, input_labels)
+ref_tree <- keep.tip(ref_tree, in_ref_common)
+input_ref <- keep.tip(input_tree, in_ref_common)
+ref_tips_kept <- length(input_ref$tip.label)
 
 # Compute the Nye similarity scores
-nye_russ <- NyeSimilarity(russ, input_russ, normalize = pmax.int)
+nye_score <- NyeSimilarity(ref_tree, input_ref, normalize = pmax.int)
 
 #####
 # normalize = pmax.int normalizes against the number of splits in the most
@@ -74,15 +75,14 @@ nye_russ <- NyeSimilarity(russ, input_russ, normalize = pmax.int)
 #####
 
 # Output the results to a file
-russ_text <- "compared with russ unrooted,"
-tips_text <- "tips kept: "
+headers <- "reference,input,Nye score,tips kept"
 
 if(file.exists(fout)) {
   conx <- file(fout, "a")
-  cat(fin, ",", russ_text, nye_russ, tips_text, russ_tips_kept, "\n", file = conx)
+  cat(refFile, ",", fin, ",", nye_score, ",", ref_tips_kept, "\n", file = conx)
   close(conx)
 } else {
-  cat(fin, ",", russ_text, nye_russ, tips_text, russ_tips_kept, "\n", file = fout)
+  cat(headers, "\n", refFile, ",", fin, ",", nye_score, ",", ref_tips_kept, "\n", file = fout)
   conx <- file(fout, "a")
   close(conx)
 }
