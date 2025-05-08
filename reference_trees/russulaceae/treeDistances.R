@@ -1,16 +1,17 @@
 #####
 # This script aims to output a similarity score between a selected input file
-# and the JGI tree (version Jan 2025), as well as the tree from Li et al. 2021,
+# and the russ tree (version Jan 2025), as well as the tree from Li et al. 2021,
 # following the scoring metric from Nye et al. 2006.
 #
 # Make sure to place all input files in the same folder as this script, as the
-# script will not run without the JGItree.nwk and Lietal_2021.nwk files available
+# script will not run without the russtree.nwk and Lietal_2021.nwk files available
 # in this folder.
 # 
 # Use: Rscript treeDistances.R input output
 #      input: tree in Newick file format
 #      output: file name you want to output the results to. if the file exists,
-#              outputs will be appended. if not, file will be created.
+#              outputs will be appended. if not, file will be created. output is
+#              a csv.
 #####
 
 # Command line arguments
@@ -40,16 +41,16 @@ library(TreeDist)
 library(ape)
 
 # Read in reference trees
-russ <- read.tree("Russulaceae_full_trimal_newick_unrooted")
+russ <- read.tree("Looney_unrooted_unedited")
 
 # Read in comparison tree
 input_tree <- read.tree(fin)
 
 # Get tip labels for all trees
-russ <- russ$tip.label
+russ_labels <- russ$tip.label
 input_labels <- input_tree$tip.label
 
-# Input + JGI
+# Input + russ
 # Find all tips in common
 in_russ_common <- intersect(russ_labels, input_labels)
 russ <- keep.tip(russ, in_russ_common)
@@ -73,8 +74,8 @@ nye_russ <- NyeSimilarity(russ, input_russ, normalize = pmax.int)
 #####
 
 # Output the results to a file
-russ_text <- "compared with Russ unrooted,"
-tips_text <- ",tips kept: "
+russ_text <- "compared with russ unrooted,"
+tips_text <- "tips kept: "
 
 if(file.exists(fout)) {
   conx <- file(fout, "a")

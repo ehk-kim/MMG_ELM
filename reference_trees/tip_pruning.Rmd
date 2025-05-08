@@ -28,8 +28,10 @@ get_tips <- function(fin, fout) {
   return(tree)
 }
 
-jgi <- get_tips("jgi_modded_alltips.txt", "jgi_tips.csv")
-li <- get_tips("li_alltips.nwk", "li_tips.csv")
+#jgi <- get_tips("jgi_modded_alltips.txt", "jgi_tips.csv")
+#li <- get_tips("li_alltips.nwk", "li_tips.csv")
+looney <- get_tips("Looney_unrooted_unedited", "looney_tips.csv")
+iqtree <- get_tips("iqtree_russ_full", "iqtree_tips.csv")
 ```
 
 Set tips to delete
@@ -117,7 +119,13 @@ for(i in 1:length(li_missing_fams$ncbi)) {
 ```
 
 ```{r}
-test <- jgi$tre_tax
+test <- read.csv("testing_files/jgi_fams_inorder.csv")
+test <- subset(test, select=-c(X))
+
+test <- test %>% group_by(Family) %>%tally()
+```
+```{r}
+
 ```
 
 

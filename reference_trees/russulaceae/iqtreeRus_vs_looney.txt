@@ -1,0 +1,8 @@
+russulaceae_all_iqtree_edited.treefile , compared with russ rooted, 0.6240741 tips kept:  12 
+russulaceae_all_iqtree_edited.treefile , compared with russ unrooted, 0.6240741 tips kept:  12 
+russulaceae_all_new_outgroup_iqtree.treefile , compared with russ unrooted, NaN tips kept:  3 
+russulaceae_all_new_outgroup_iqtree.treefile , compared with russ unrooted, 0.6018398 tips kept:  13 
+Russulaceae_full_trimal_newick , compared with russ unrooted, 1 tips kept:  266 
+russulaceae_ITS_042725_from_chance_iqtree.treefile , compared with russ unrooted, 0.7675116 tips kept:  232 
+russulaceae_ITS_042725_from_chance_iqtree.treefile , compared with russ unrooted, 0.7682537 tips kept:  245 
+iqtree_russ_full , compared with russ unrooted, 0.7619113 tips kept:  267 
