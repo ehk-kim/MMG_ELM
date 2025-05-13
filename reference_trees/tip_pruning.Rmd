@@ -28,10 +28,12 @@ get_tips <- function(fin, fout) {
   return(tree)
 }
 
-#jgi <- get_tips("jgi_modded_alltips.txt", "jgi_tips.csv")
-#li <- get_tips("li_alltips.nwk", "li_tips.csv")
-looney <- get_tips("Looney_unrooted_unedited", "looney_tips.csv")
-#iqtree <- get_tips("iqtree_russ_full_its2.treefile", "iqtree_tips.csv")
+#looney <- get_tips("Looney_unrooted_unedited", "looney_tips.csv")
+lactarius <- get_tips("lactarius_its2.treefile", "lactarius_tips.csv")
+lactifluus <- get_tips("lactifluus_its2.treefile", "lactifluus_tips.csv")
+multifurca <- get_tips("multifurca_its2.treefile", "multifurca_tips.csv")
+russula <- get_tips("russula_its2.treefile", "russula_tips.csv")
+russ_tree <- get_tips("looney_unrooted_unedited", "russulaceae_tips.csv")
 ```
 
 Set tips to delete
@@ -136,10 +138,10 @@ test <- test %>% group_by(Family) %>%tally()
 # 1. Keep all tips except 1 per genus
 # 2. Save as backbone tree
 
-russ_tree <- drop.tip(russ_tree, c("Lactifluus_gerardii_AV05-375","Lactifluus_volemus_UE09.08.2004-5","Lactifluus_piperatus_UE09.08.2004-6","Lactifluus_longisporus_AV99-197_BB_00.1519","Lacttifluus_edulis_AV99-041","Lactarius_nodosicystidiosus_BB97-072","Lactifluus_phlebophyllus_BB00-1388","R_variicolor_ISOTYPE_FL","Lactarius_chromospermus_AV99-174","Lactifluus_emergens_AV99-005","Lactifluus_velutissimus_AV99-185","Lactifluus_deceptivus_AV04-181"
+russ_tree <- drop.tip(russ_tree, c("Lactifluus_longisporus_AV99-197_BB_00.1519", "R_cremeiceps_ISOTYPE_FL", "R_subrubescens_COISOTYPE_FL", "R_brunneipes_ISOTYPE_FL", "R_levyana_ISOTYPE_FL", "R_pinophila_ISOTYPE_FL", "R_vinosorosea_ISOTYPE_FL", "R_albomarginata_ISOTYPE_FL", "R_emeticiformis_ISOTOYPE_FL", "R_fragiloides_ISOTYPE_FL", "R_aff_vesca_FH12106_THA", "R_australirosea_ISOTYPE_FL", "Lacttifluus_edulis_AV99-041", "R_variicolor_ISOTYPE_FL"
 ))
 
-write.tree(russ_tree, file="russulaceae_backbone.nwk")
+write.tree(russ_tree, file="russulaceae_backbone1.nwk")
 
 ```
 
