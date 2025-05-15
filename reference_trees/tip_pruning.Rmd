@@ -20,20 +20,34 @@ set.
 Read in the reference trees to do custom tip pruning
 ```{r}
 get_tips <- function(fin, fout) {
+  ##########
+  ## PURPOSE:
+  #     Read in a reference tree and get the tips of that tree
+  #
+  ## USAGE:
+  #     get_tips(fin, fout)
+  #       fin: Name of tree file
+  #       fout: Name of output file
+  ##########
+  
   tree <- read.tree(fin)
   tip_labels <- tree$tip.label
   df <- data.frame(tips = tip_labels)
+  
+  # Comment this out if you would do not want a list of tips in the tree
   write.table(df, file = fout, sep = "\n", quote = FALSE, row.names = FALSE, col.names = FALSE)
   
   return(tree)
 }
 
-#looney <- get_tips("Looney_unrooted_unedited", "looney_tips.csv")
+jgi <- get_tips("unmodified_references/JGI_2024_unedited.nwk", "JGI_tips.csv")
+li <- get_tips("unmodified_references/Lietal_2021_unedited.treefile", "Lietal_2021_tips.csv")
+looney <- get_tips("unmodified_references/Looneyetal_2018.nwk", "looney_tips.csv")
+
 lactarius <- get_tips("lactarius_its2.treefile", "lactarius_tips.csv")
 lactifluus <- get_tips("lactifluus_its2.treefile", "lactifluus_tips.csv")
 multifurca <- get_tips("multifurca_its2.treefile", "multifurca_tips.csv")
 russula <- get_tips("russula_its2.treefile", "russula_tips.csv")
-russ_tree <- get_tips("looney_unrooted_unedited", "russulaceae_tips.csv")
 ```
 
 Set tips to delete
@@ -119,17 +133,6 @@ for(i in 1:length(li_missing_fams$ncbi)) {
 # from here, manually add taxonomy information to unite_taxonomy.csv and rerun
 # previous cell (step 1)
 ```
-
-```{r}
-test <- read.csv("testing_files/jgi_fams_inorder.csv")
-test <- subset(test, select=-c(X))
-
-test <- test %>% group_by(Family) %>%tally()
-```
-```{r}
-
-```
-
 
 3. get backbone for tree
 ```{r}
