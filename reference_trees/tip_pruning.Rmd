@@ -44,6 +44,7 @@ jgi <- get_tips("unmodified_references/JGI_2024_unedited.nwk", "JGI_tips.csv")
 li <- get_tips("unmodified_references/Lietal_2021_unedited.treefile", "Lietal_2021_tips.csv")
 looney <- get_tips("unmodified_references/Looneyetal_2018.nwk", "looney_tips.csv")
 
+russulaceae <- get_tips("Looneyetal_2018.nwk", "looney_tips.csv")
 lactarius <- get_tips("lactarius_its2.treefile", "lactarius_tips.csv")
 lactifluus <- get_tips("lactifluus_its2.treefile", "lactifluus_tips.csv")
 multifurca <- get_tips("multifurca_its2.treefile", "multifurca_tips.csv")
@@ -80,7 +81,7 @@ get_fams <- function(trefile) {
   tre <- read.tree(trefile)
   
   # get taxonomy information from UNITE database
-  all_tax <- read.csv("unite_taxonomy.csv")
+  all_tax <- read.csv("database_information/unite_taxonomy.csv")
   all_tax <- distinct(all_tax, Species, .keep_all = TRUE)
   
   # manipulate taxonomy information to get genera
@@ -105,7 +106,7 @@ get_fams <- function(trefile) {
   return(list("tre_tax" = tre_tax, "non_unite" = non_unite))
 }
 
-jgi_tax <- get_fams("JGItree.nwk")
+jgi_tax <- get_fams("JGI.nwk")
 li_tax <- get_fams("Lietal_2021.nwk")
 ```
 
@@ -140,13 +141,16 @@ for(i in 1:length(li_missing_fams$ncbi)) {
 # Steps:
 # 1. Keep all tips except 1 per genus
 # 2. Save as backbone tree
+# 3. Rename the 1 species per genus to "genus_genusName"
+#
+# Notes:
+# - the resulting backbone will not have accurate branch lengths, but will have accurate topology
+# - R can only handle a certain # of characters per line. Drop ~100 tips at a time per line to bypass this limit.
 
-russ_tree <- drop.tip(russ_tree, c("Lactifluus_longisporus_AV99-197_BB_00.1519", "R_cremeiceps_ISOTYPE_FL", "R_subrubescens_COISOTYPE_FL", "R_brunneipes_ISOTYPE_FL", "R_levyana_ISOTYPE_FL", "R_pinophila_ISOTYPE_FL", "R_vinosorosea_ISOTYPE_FL", "R_albomarginata_ISOTYPE_FL", "R_emeticiformis_ISOTOYPE_FL", "R_fragiloides_ISOTYPE_FL", "R_aff_vesca_FH12106_THA", "R_australirosea_ISOTYPE_FL", "Lacttifluus_edulis_AV99-041", "R_variicolor_ISOTYPE_FL"
-))
+russulaceae <- drop.tip(russulaceae, c("insert all species here"))
 
-write.tree(russ_tree, file="russulaceae_backbone1.nwk")
+write.tree(russ_tree, file="russulaceae_backbone.nwk")
 
 ```
-
 
 ################################
