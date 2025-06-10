@@ -28,12 +28,12 @@ fout <- args[3]
 # Load all libraries
 if (!require(TreeDist)) {
   print("Installing required package TreeDist")
-  install.packages(TreeDist)
+  install.packages("TreeDist")
 }
 
 if (!require(ape)) {
   print("Installing required package ape")
-  install.packages(ape)
+  install.packages("ape")
 }
 
 library(TreeDist)
